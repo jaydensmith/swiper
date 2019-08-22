@@ -14,7 +14,7 @@ module.exports = {
     // 'history',
     // 'hash-navigation',
     'autoplay',
-    // 'effect-fade',
+    'effect-fade',
     // 'effect-cube',
     // 'effect-flip',
     // 'effect-coverflow',
