@@ -27,10 +27,10 @@ function isEventSupported() {
 }
 const Mousewheel = {
   lastScrollTime: Utils.now(),
-  event: (function getEvent() {
+  event() {
     if (window.navigator.userAgent.indexOf('firefox') > -1) return 'DOMMouseScroll';
     return isEventSupported() ? 'wheel' : 'mousewheel';
-  }()),
+  },
   normalize(e) {
     // Reasonable defaults
     const PIXEL_STEP = 10;
@@ -72,6 +72,11 @@ const Mousewheel = {
       pX = e.deltaX;
     }
 
+    if (e.shiftKey && !pX) { // if user scrolls with shift he wants horizontal scroll
+      pX = pY;
+      pY = 0;
+    }
+
     if ((pX || pY) && e.deltaMode) {
       if (e.deltaMode === 1) { // delta in LINE units
         pX *= LINE_HEIGHT;
@@ -109,6 +114,10 @@ const Mousewheel = {
     let e = event;
     const swiper = this;
     const params = swiper.params.mousewheel;
+
+    if (swiper.params.cssMode) {
+      e.preventDefault();
+    }
 
     if (!swiper.mouseEntered && !params.releaseOnEdges) return true;
 
@@ -188,7 +197,12 @@ const Mousewheel = {
   },
   enable() {
     const swiper = this;
-    if (!Mousewheel.event) return false;
+    const event = Mousewheel.event();
+    if (swiper.params.cssMode) {
+      swiper.wrapperEl.removeEventListener(event, swiper.mousewheel.handle);
+      return true;
+    }
+    if (!event) return false;
     if (swiper.mousewheel.enabled) return false;
     let target = swiper.$el;
     if (swiper.params.mousewheel.eventsTarged !== 'container') {
@@ -196,19 +210,24 @@ const Mousewheel = {
     }
     target.on('mouseenter', swiper.mousewheel.handleMouseEnter);
     target.on('mouseleave', swiper.mousewheel.handleMouseLeave);
-    target.on(Mousewheel.event, swiper.mousewheel.handle);
+    target.on(event, swiper.mousewheel.handle);
     swiper.mousewheel.enabled = true;
     return true;
   },
   disable() {
     const swiper = this;
-    if (!Mousewheel.event) return false;
+    const event = Mousewheel.event();
+    if (swiper.params.cssMode) {
+      swiper.wrapperEl.addEventListener(event, swiper.mousewheel.handle);
+      return true;
+    }
+    if (!event) return false;
     if (!swiper.mousewheel.enabled) return false;
     let target = swiper.$el;
     if (swiper.params.mousewheel.eventsTarged !== 'container') {
       target = $(swiper.params.mousewheel.eventsTarged);
     }
-    target.off(Mousewheel.event, swiper.mousewheel.handle);
+    target.off(event, swiper.mousewheel.handle);
     swiper.mousewheel.enabled = false;
     return true;
   },
@@ -243,10 +262,16 @@ export default {
   on: {
     init() {
       const swiper = this;
+      if (!swiper.params.mousewheel.enabled && swiper.params.cssMode) {
+        swiper.mousewheel.disable();
+      }
       if (swiper.params.mousewheel.enabled) swiper.mousewheel.enable();
     },
     destroy() {
       const swiper = this;
+      if (swiper.params.cssMode) {
+        swiper.mousewheel.enable();
+      }
       if (swiper.mousewheel.enabled) swiper.mousewheel.disable();
     },
   },

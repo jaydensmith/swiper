@@ -1,9 +1,7 @@
-import Support from '../../../utils/support';
-
 export default function (translate, byController) {
   const swiper = this;
   const {
-    rtlTranslate: rtl, params, $wrapperEl, progress,
+    rtlTranslate: rtl, params, $wrapperEl, wrapperEl, progress,
   } = swiper;
   let x = 0;
   let y = 0;
@@ -20,9 +18,10 @@ export default function (translate, byController) {
     y = Math.floor(y);
   }
 
-  if (!params.virtualTranslate) {
-    if (Support.transforms3d) $wrapperEl.transform(`translate3d(${x}px, ${y}px, ${z}px)`);
-    else $wrapperEl.transform(`translate(${x}px, ${y}px)`);
+  if (params.cssMode) {
+    wrapperEl[swiper.isHorizontal() ? 'scrollLeft' : 'scrollTop'] = swiper.isHorizontal() ? -x : -y;
+  } else if (!params.virtualTranslate) {
+    $wrapperEl.transform(`translate3d(${x}px, ${y}px, ${z}px)`);
   }
   swiper.previousTranslate = swiper.translate;
   swiper.translate = swiper.isHorizontal() ? x : y;

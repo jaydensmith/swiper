@@ -33,17 +33,9 @@ export default function (event) {
   // Tap, doubleTap, Click
   if (swiper.allowClick) {
     swiper.updateClickedSlide(e);
-    swiper.emit('tap', e);
-    if (timeDiff < 300 && (touchEndTime - data.lastClickTime) > 300) {
-      if (data.clickTimeout) clearTimeout(data.clickTimeout);
-      data.clickTimeout = Utils.nextTick(() => {
-        if (!swiper || swiper.destroyed) return;
-        swiper.emit('click', e);
-      }, 300);
-    }
+    swiper.emit('tap click', e);
     if (timeDiff < 300 && (touchEndTime - data.lastClickTime) < 300) {
-      if (data.clickTimeout) clearTimeout(data.clickTimeout);
-      swiper.emit('doubleTap', e);
+      swiper.emit('doubleTap doubleClick', e);
     }
   }
 
@@ -67,6 +59,10 @@ export default function (event) {
     currentPos = rtl ? swiper.translate : -swiper.translate;
   } else {
     currentPos = -data.currentTranslate;
+  }
+
+  if (params.cssMode) {
+    return;
   }
 
   if (params.freeMode) {
@@ -259,10 +255,17 @@ export default function (event) {
       swiper.slideTo(swiper.activeIndex);
       return;
     }
-    if (swiper.swipeDirection === 'next') {
+    const isNavButtonTarget = swiper.navigation && (e.target === swiper.navigation.nextEl || e.target === swiper.navigation.prevEl);
+    if (!isNavButtonTarget) {
+      if (swiper.swipeDirection === 'next') {
+        swiper.slideTo(stopIndex + params.slidesPerGroup);
+      }
+      if (swiper.swipeDirection === 'prev') {
+        swiper.slideTo(stopIndex);
+      }
+    } else if (e.target === swiper.navigation.nextEl) {
       swiper.slideTo(stopIndex + params.slidesPerGroup);
-    }
-    if (swiper.swipeDirection === 'prev') {
+    } else {
       swiper.slideTo(stopIndex);
     }
   }

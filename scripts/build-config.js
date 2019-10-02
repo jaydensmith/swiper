@@ -20,8 +20,7 @@ module.exports = {
     // 'effect-coverflow',
     // 'thumbs',
   ],
-  target: 'universal',
-  themeColor: '#007aff',
+  themeColor: '#ffffff',
   colors: {
     white: '#ffffff',
     black: '#000000',

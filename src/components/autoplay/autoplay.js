@@ -9,6 +9,7 @@ const Autoplay = {
     if ($activeSlideEl.attr('data-swiper-autoplay')) {
       delay = $activeSlideEl.attr('data-swiper-autoplay') || swiper.params.autoplay.delay;
     }
+    clearTimeout(swiper.autoplay.timeout);
     swiper.autoplay.timeout = Utils.nextTick(() => {
       if (swiper.params.autoplay.reverseDirection) {
         if (swiper.params.loop) {
@@ -37,6 +38,7 @@ const Autoplay = {
       } else {
         swiper.autoplay.stop();
       }
+      if (swiper.params.cssMode && swiper.autoplay.running) swiper.autoplay.run();
     }, delay);
   },
   start() {
@@ -99,6 +101,15 @@ export default {
         start: Autoplay.start.bind(swiper),
         stop: Autoplay.stop.bind(swiper),
         pause: Autoplay.pause.bind(swiper),
+        onVisibilityChange() {
+          if (document.visibilityState === 'hidden' && swiper.autoplay.running) {
+            swiper.autoplay.pause();
+          }
+          if (document.visibilityState === 'visible' && swiper.autoplay.paused) {
+            swiper.autoplay.run();
+            swiper.autoplay.paused = false;
+          }
+        },
         onTransitionEnd(e) {
           if (!swiper || swiper.destroyed || !swiper.$wrapperEl) return;
           if (e.target !== this) return;
@@ -119,6 +130,7 @@ export default {
       const swiper = this;
       if (swiper.params.autoplay.enabled) {
         swiper.autoplay.start();
+        document.addEventListener('visibilitychange', swiper.autoplay.onVisibilityChange);
       }
     },
     beforeTransitionStart(speed, internal) {
@@ -141,11 +153,18 @@ export default {
         }
       }
     },
+    touchEnd() {
+      const swiper = this;
+      if (swiper.params.cssMode && swiper.autoplay.paused && !swiper.params.autoplay.disableOnInteraction) {
+        swiper.autoplay.run();
+      }
+    },
     destroy() {
       const swiper = this;
       if (swiper.autoplay.running) {
         swiper.autoplay.stop();
       }
+      document.removeEventListener('visibilitychange', swiper.autoplay.onVisibilityChange);
     },
   },
 };

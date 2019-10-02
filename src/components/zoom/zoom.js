@@ -376,6 +376,7 @@ const Zoom = {
     zoom.enabled = true;
 
     const passiveListener = swiper.touchEvents.start === 'touchstart' && Support.passiveListener && swiper.params.passiveListeners ? { passive: true, capture: false } : false;
+    const activeListenerWithCapture = Support.passiveListener ? { passive: false, capture: true } : true;
 
     // Scale image
     if (Support.gestures) {
@@ -386,10 +387,13 @@ const Zoom = {
       swiper.$wrapperEl.on(swiper.touchEvents.start, '.swiper-slide', zoom.onGestureStart, passiveListener);
       swiper.$wrapperEl.on(swiper.touchEvents.move, '.swiper-slide', zoom.onGestureChange, passiveListener);
       swiper.$wrapperEl.on(swiper.touchEvents.end, '.swiper-slide', zoom.onGestureEnd, passiveListener);
+      if (swiper.touchEvents.cancel) {
+        swiper.$wrapperEl.on(swiper.touchEvents.cancel, '.swiper-slide', zoom.onGestureEnd, passiveListener);
+      }
     }
 
     // Move image
-    swiper.$wrapperEl.on(swiper.touchEvents.move, `.${swiper.params.zoom.containerClass}`, zoom.onTouchMove);
+    swiper.$wrapperEl.on(swiper.touchEvents.move, `.${swiper.params.zoom.containerClass}`, zoom.onTouchMove, activeListenerWithCapture);
   },
   disable() {
     const swiper = this;
@@ -399,6 +403,7 @@ const Zoom = {
     swiper.zoom.enabled = false;
 
     const passiveListener = swiper.touchEvents.start === 'touchstart' && Support.passiveListener && swiper.params.passiveListeners ? { passive: true, capture: false } : false;
+    const activeListenerWithCapture = Support.passiveListener ? { passive: false, capture: true } : true;
 
     // Scale image
     if (Support.gestures) {
@@ -409,10 +414,13 @@ const Zoom = {
       swiper.$wrapperEl.off(swiper.touchEvents.start, '.swiper-slide', zoom.onGestureStart, passiveListener);
       swiper.$wrapperEl.off(swiper.touchEvents.move, '.swiper-slide', zoom.onGestureChange, passiveListener);
       swiper.$wrapperEl.off(swiper.touchEvents.end, '.swiper-slide', zoom.onGestureEnd, passiveListener);
+      if (swiper.touchEvents.cancel) {
+        swiper.$wrapperEl.off(swiper.touchEvents.cancel, '.swiper-slide', zoom.onGestureEnd, passiveListener);
+      }
     }
 
     // Move image
-    swiper.$wrapperEl.off(swiper.touchEvents.move, `.${swiper.params.zoom.containerClass}`, zoom.onTouchMove);
+    swiper.$wrapperEl.off(swiper.touchEvents.move, `.${swiper.params.zoom.containerClass}`, zoom.onTouchMove, activeListenerWithCapture);
   },
 };
 
@@ -520,6 +528,12 @@ export default {
     transitionEnd() {
       const swiper = this;
       if (swiper.zoom.enabled && swiper.params.zoom.enabled) {
+        swiper.zoom.onTransitionEnd();
+      }
+    },
+    slideChange() {
+      const swiper = this;
+      if (swiper.zoom.enabled && swiper.params.zoom.enabled && swiper.params.cssMode) {
         swiper.zoom.onTransitionEnd();
       }
     },

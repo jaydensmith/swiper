@@ -2,7 +2,6 @@
 import $ from '../../utils/dom';
 import Utils from '../../utils/utils';
 import Support from '../../utils/support';
-import Browser from '../../utils/browser';
 
 import SwiperClass from '../../utils/class';
 
@@ -120,8 +119,14 @@ class Swiper extends SwiperClass {
     $el.data('swiper', swiper);
 
     // Find Wrapper
-    const $wrapperEl = $el.children(`.${swiper.params.wrapperClass}`);
-
+    let $wrapperEl;
+    if (el && el.shadowRoot && el.shadowRoot.querySelector) {
+      $wrapperEl = $(el.shadowRoot.querySelector(`.${swiper.params.wrapperClass}`));
+      // Children needs to return slot items
+      $wrapperEl.children = (options) => $el.children(options);
+    } else {
+      $wrapperEl = $el.children(`.${swiper.params.wrapperClass}`);
+    }
     // Extend Swiper
     Utils.extend(swiper, {
       $el,
@@ -171,17 +176,16 @@ class Swiper extends SwiperClass {
 
       // Touch Events
       touchEvents: (function touchEvents() {
-        const touch = ['touchstart', 'touchmove', 'touchend'];
+        const touch = ['touchstart', 'touchmove', 'touchend', 'touchcancel'];
         let desktop = ['mousedown', 'mousemove', 'mouseup'];
         if (Support.pointerEvents) {
           desktop = ['pointerdown', 'pointermove', 'pointerup'];
-        } else if (Support.prefixedPointerEvents) {
-          desktop = ['MSPointerDown', 'MSPointerMove', 'MSPointerUp'];
         }
         swiper.touchEventsTouch = {
           start: touch[0],
           move: touch[1],
           end: touch[2],
+          cancel: touch[3],
         };
         swiper.touchEventsDesktop = {
           start: desktop[0],
@@ -329,24 +333,9 @@ class Swiper extends SwiperClass {
       return swiper;
     }
 
-    if (currentDirection === 'vertical') {
-      swiper.$el
-        .removeClass(`${swiper.params.containerModifierClass}vertical wp8-vertical`)
-        .addClass(`${swiper.params.containerModifierClass}${newDirection}`);
-
-      if ((Browser.isIE || Browser.isEdge) && (Support.pointerEvents || Support.prefixedPointerEvents)) {
-        swiper.$el.addClass(`${swiper.params.containerModifierClass}wp8-${newDirection}`);
-      }
-    }
-    if (currentDirection === 'horizontal') {
-      swiper.$el
-        .removeClass(`${swiper.params.containerModifierClass}horizontal wp8-horizontal`)
-        .addClass(`${swiper.params.containerModifierClass}${newDirection}`);
-
-      if ((Browser.isIE || Browser.isEdge) && (Support.pointerEvents || Support.prefixedPointerEvents)) {
-        swiper.$el.addClass(`${swiper.params.containerModifierClass}wp8-${newDirection}`);
-      }
-    }
+    swiper.$el
+      .removeClass(`${swiper.params.containerModifierClass}${currentDirection}`)
+      .addClass(`${swiper.params.containerModifierClass}${newDirection}`);
 
     swiper.params.direction = newDirection;
 
@@ -456,9 +445,7 @@ class Swiper extends SwiperClass {
             params.slidePrevClass,
           ].join(' '))
           .removeAttr('style')
-          .removeAttr('data-swiper-slide-index')
-          .removeAttr('data-swiper-column')
-          .removeAttr('data-swiper-row');
+          .removeAttr('data-swiper-slide-index');
       }
     }
 

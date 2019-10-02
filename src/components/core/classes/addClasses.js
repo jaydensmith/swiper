@@ -1,6 +1,4 @@
-import Support from '../../../utils/support';
 import Device from '../../../utils/device';
-import Browser from '../../../utils/browser';
 
 export default function () {
   const swiper = this;
@@ -15,9 +13,6 @@ export default function () {
   if (params.freeMode) {
     suffixes.push('free-mode');
   }
-  if (!Support.flexbox) {
-    suffixes.push('no-flexbox');
-  }
   if (params.autoHeight) {
     suffixes.push('autoheight');
   }
@@ -26,6 +21,9 @@ export default function () {
   }
   if (params.slidesPerColumn > 1) {
     suffixes.push('multirow');
+    if (params.slidesPerColumnFill === 'column') {
+      suffixes.push('multirow-column');
+    }
   }
   if (Device.android) {
     suffixes.push('android');
@@ -33,9 +31,9 @@ export default function () {
   if (Device.ios) {
     suffixes.push('ios');
   }
-  // WP8 Touch Events Fix
-  if ((Browser.isIE || Browser.isEdge) && (Support.pointerEvents || Support.prefixedPointerEvents)) {
-    suffixes.push(`wp8-${params.direction}`);
+
+  if (params.cssMode) {
+    suffixes.push('css-mode');
   }
 
   suffixes.forEach((suffix) => {

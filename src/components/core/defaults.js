@@ -4,6 +4,7 @@ export default {
   touchEventsTarget: 'container',
   initialSlide: 0,
   speed: 300,
+  cssMode: false,
   //
   preventInteractionOnTransition: false,
 
@@ -35,7 +36,6 @@ export default {
 
   // Breakpoints
   breakpoints: undefined,
-  breakpointsInverse: false,
 
   // Slides grid
   spaceBetween: 0,
@@ -66,7 +66,7 @@ export default {
   followFinger: true,
   allowTouchMove: true,
   threshold: 0,
-  touchMoveStopPropagation: true,
+  touchMoveStopPropagation: false,
   touchStartPreventDefault: true,
   touchStartForcePreventDefault: false,
   touchReleaseOnEdges: false,

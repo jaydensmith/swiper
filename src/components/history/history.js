@@ -31,7 +31,7 @@ const History = {
     swiper.history.scrollToSlide(swiper.params.speed, swiper.history.paths.value, false);
   },
   getPathValues() {
-    const pathArray = window.location.pathname.slice(1).split('/').filter(part => part !== '');
+    const pathArray = window.location.pathname.slice(1).split('/').filter((part) => part !== '');
     const total = pathArray.length;
     const key = pathArray[total - 2];
     const value = pathArray[total - 1];
@@ -117,6 +117,12 @@ export default {
     transitionEnd() {
       const swiper = this;
       if (swiper.history.initialized) {
+        swiper.history.setHistory(swiper.params.history.key, swiper.activeIndex);
+      }
+    },
+    slideChange() {
+      const swiper = this;
+      if (swiper.history.initialized && swiper.params.cssMode) {
         swiper.history.setHistory(swiper.params.history.key, swiper.activeIndex);
       }
     },

@@ -34,6 +34,7 @@ import {
   closest,
   find,
   children,
+  filter,
   remove,
   add,
   styles,
@@ -74,13 +75,14 @@ const Methods = {
   closest,
   find,
   children,
+  filter,
   remove,
   add,
   styles,
 };
 
 Object.keys(Methods).forEach((methodName) => {
-  $.fn[methodName] = Methods[methodName];
+  $.fn[methodName] = $.fn[methodName] || Methods[methodName];
 });
 
 export default $;

@@ -30,18 +30,10 @@ const Scrollbar = {
       newSize = trackSize - newPos;
     }
     if (swiper.isHorizontal()) {
-      if (Support.transforms3d) {
-        $dragEl.transform(`translate3d(${newPos}px, 0, 0)`);
-      } else {
-        $dragEl.transform(`translateX(${newPos}px)`);
-      }
+      $dragEl.transform(`translate3d(${newPos}px, 0, 0)`);
       $dragEl[0].style.width = `${newSize}px`;
     } else {
-      if (Support.transforms3d) {
-        $dragEl.transform(`translate3d(0px, ${newPos}px, 0)`);
-      } else {
-        $dragEl.transform(`translateY(${newPos}px)`);
-      }
+      $dragEl.transform(`translate3d(0px, ${newPos}px, 0)`);
       $dragEl[0].style.height = `${newSize}px`;
     }
     if (params.hide) {
@@ -100,19 +92,26 @@ const Scrollbar = {
     });
     scrollbar.$el[swiper.params.watchOverflow && swiper.isLocked ? 'addClass' : 'removeClass'](swiper.params.scrollbar.lockClass);
   },
+  getPointerPosition(e) {
+    const swiper = this;
+    if (swiper.isHorizontal()) {
+      return ((e.type === 'touchstart' || e.type === 'touchmove') ? e.targetTouches[0].clientX : e.clientX);
+    }
+    return ((e.type === 'touchstart' || e.type === 'touchmove') ? e.targetTouches[0].clientY : e.clientY);
+  },
   setDragPosition(e) {
     const swiper = this;
     const { scrollbar, rtlTranslate: rtl } = swiper;
-    const { $el, dragSize, trackSize } = scrollbar;
+    const {
+      $el,
+      dragSize,
+      trackSize,
+      dragStartPos,
+    } = scrollbar;
 
-    let pointerPosition;
-    if (swiper.isHorizontal()) {
-      pointerPosition = ((e.type === 'touchstart' || e.type === 'touchmove') ? e.targetTouches[0].pageX : e.pageX || e.clientX);
-    } else {
-      pointerPosition = ((e.type === 'touchstart' || e.type === 'touchmove') ? e.targetTouches[0].pageY : e.pageY || e.clientY);
-    }
     let positionRatio;
-    positionRatio = ((pointerPosition) - $el.offset()[swiper.isHorizontal() ? 'left' : 'top'] - (dragSize / 2)) / (trackSize - dragSize);
+    positionRatio = ((scrollbar.getPointerPosition(e)) - $el.offset()[swiper.isHorizontal() ? 'left' : 'top']
+      - (dragStartPos !== null ? dragStartPos : dragSize / 2)) / (trackSize - dragSize);
     positionRatio = Math.max(Math.min(positionRatio, 1), 0);
     if (rtl) {
       positionRatio = 1 - positionRatio;
@@ -131,6 +130,8 @@ const Scrollbar = {
     const { scrollbar, $wrapperEl } = swiper;
     const { $el, $dragEl } = scrollbar;
     swiper.scrollbar.isTouched = true;
+    swiper.scrollbar.dragStartPos = (e.target === $dragEl[0] || e.target === $dragEl)
+      ? scrollbar.getPointerPosition(e) - e.target.getBoundingClientRect()[swiper.isHorizontal() ? 'left' : 'top'] : null;
     e.preventDefault();
     e.stopPropagation();
 
@@ -143,6 +144,9 @@ const Scrollbar = {
     $el.transition(0);
     if (params.hide) {
       $el.css('opacity', 1);
+    }
+    if (swiper.params.cssMode) {
+      swiper.$wrapperEl.css('scroll-snap-type', 'none');
     }
     swiper.emit('scrollbarDragStart', e);
   },
@@ -164,11 +168,15 @@ const Scrollbar = {
     const swiper = this;
 
     const params = swiper.params.scrollbar;
-    const { scrollbar } = swiper;
+    const { scrollbar, $wrapperEl } = swiper;
     const { $el } = scrollbar;
 
     if (!swiper.scrollbar.isTouched) return;
     swiper.scrollbar.isTouched = false;
+    if (swiper.params.cssMode) {
+      swiper.$wrapperEl.css('scroll-snap-type', '');
+      $wrapperEl.transition('');
+    }
     if (params.hide) {
       clearTimeout(swiper.scrollbar.dragTimeout);
       swiper.scrollbar.dragTimeout = Utils.nextTick(() => {
@@ -280,6 +288,7 @@ export default {
         enableDraggable: Scrollbar.enableDraggable.bind(swiper),
         disableDraggable: Scrollbar.disableDraggable.bind(swiper),
         setDragPosition: Scrollbar.setDragPosition.bind(swiper),
+        getPointerPosition: Scrollbar.getPointerPosition.bind(swiper),
         onDragStart: Scrollbar.onDragStart.bind(swiper),
         onDragMove: Scrollbar.onDragMove.bind(swiper),
         onDragEnd: Scrollbar.onDragEnd.bind(swiper),

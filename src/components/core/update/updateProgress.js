@@ -1,9 +1,13 @@
 import Utils from '../../../utils/utils';
 
-export default function (translate = (this && this.translate) || 0) {
+export default function (translate) {
   const swiper = this;
+  if (typeof translate === 'undefined') {
+    const multiplier = swiper.rtlTranslate ? -1 : 1;
+    // eslint-disable-next-line
+    translate = (swiper && swiper.translate && (swiper.translate * multiplier)) || 0;
+  }
   const params = swiper.params;
-
   const translatesDiff = swiper.maxTranslate() - swiper.minTranslate();
   let { progress, isBeginning, isEnd } = swiper;
   const wasBeginning = isBeginning;
